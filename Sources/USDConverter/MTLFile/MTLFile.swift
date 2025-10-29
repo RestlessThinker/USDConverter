@@ -6,7 +6,7 @@
 //  Copyright © 2019 Emma Alyx Wunder. All rights reserved.
 //
 
-import Cocoa
+import Foundation
 
 class MTLFile {
 

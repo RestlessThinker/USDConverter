@@ -6,8 +6,11 @@
 //  Copyright © 2019 Emma Alyx Wunder. All rights reserved.
 //
 
-import Cocoa
+import Foundation
 import ModelIO
+#if canImport(AppKit)
+import AppKit
+#endif
 
 // only has the properties used in Apple Model I/O MTL files
 // this is not a general .mtl parser
@@ -143,10 +146,7 @@ class ModelMaterial: Hashable, CustomStringConvertible {
 				continue
 			}
 
-			guard let semanticName = ModelMaterial.allSemanticsDict[semantic] else {
-				print("Material \(self.name): Unknown semantic key \"\(semantic)\"!")
-				continue
-			}
+			guard let semanticName = ModelMaterial.allSemanticsDict[semantic] else { continue }
 
 			let materialValue = MaterialValue(materialProperty: propertyValue, forceExtended: self.forceExtendedProperties.contains(semanticName))
 
