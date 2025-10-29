@@ -8,9 +8,6 @@
 
 import Foundation
 import ModelIO
-#if canImport(AppKit)
-import AppKit
-#endif
 
 // only has the properties used in Apple Model I/O MTL files
 // this is not a general .mtl parser

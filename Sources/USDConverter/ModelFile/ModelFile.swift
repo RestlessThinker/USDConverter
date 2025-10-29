@@ -7,9 +7,12 @@
 //
 
 import Foundation
+import ImageIO
 import ModelIO
-#if canImport(AppKit)
-import AppKit
+#if canImport(MobileCoreServices)
+import MobileCoreServices
+#elseif canImport(CoreServices)
+import CoreServices
 #endif
 
 final class ModelFile {
@@ -64,7 +67,6 @@ final class ModelFile {
 		return mtlString.trimmingCharacters(in: .whitespacesAndNewlines)
 	}
 
-	#if canImport(AppKit)
 	func extractTextures(_ convertToPNG: Bool, outputDirectory: URL, fileManager: FileManager, logger: ((String) -> Void)?) throws -> [URL] {
 		var alreadySaved: [URL] = []
 		var savedTextures: [URL] = []
@@ -98,23 +100,8 @@ final class ModelFile {
 					continue
 				}
 
-				let nsBitmap = NSBitmapImageRep(cgImage: cgImage)
-
-				var imageType: NSBitmapImageRep.FileType
-				if convertToPNG {
-					imageType = .png
-					textureURL = textureURL.deletingPathExtension().appendingPathExtension("png")
-				} else {
-					let textureType = textureURL.pathExtension.lowercased()
-					switch textureType {
-					case "png":
-						imageType = .png
-					case "jpg", "jpeg":
-						imageType = .jpeg
-					default:
-						imageType = .png
-					}
-				}
+				let destination = self.destinationInfo(for: textureURL, convertToPNG: convertToPNG)
+				textureURL = destination.url
 
 				guard !alreadySaved.contains(textureURL) else {
 					continue
@@ -125,17 +112,23 @@ final class ModelFile {
 					withIntermediateDirectories: true
 				)
 
-				guard let imageData = nsBitmap.representation(
-					using: imageType,
-					properties: [
-						NSBitmapImageRep.PropertyKey.compressionFactor: NSNumber(floatLiteral: 1.0)
-					]
+				guard let imageDestination = CGImageDestinationCreateWithURL(
+					textureURL as CFURL,
+					destination.type,
+					1,
+					nil
 				) else {
-					logger?("Failed to generate bitmap data for \(textureURL.lastPathComponent)")
+					logger?("Failed to create image destination for \(textureURL.lastPathComponent)")
 					continue
 				}
 
-				try imageData.write(to: textureURL)
+				CGImageDestinationAddImage(imageDestination, cgImage, destination.options)
+
+				guard CGImageDestinationFinalize(imageDestination) else {
+					logger?("Failed to write image data for \(textureURL.lastPathComponent)")
+					continue
+				}
+
 				alreadySaved.append(textureURL)
 				savedTextures.append(textureURL)
 			}
@@ -143,6 +136,27 @@ final class ModelFile {
 
 		return savedTextures
 	}
-	#endif
+
+	private func destinationInfo(for url: URL, convertToPNG: Bool) -> (type: CFString, url: URL, options: CFDictionary?) {
+		var outputURL = url
+		var type: CFString = kUTTypePNG
+		var options: CFDictionary? = nil
+
+		if convertToPNG {
+			outputURL = url.deletingPathExtension().appendingPathExtension("png")
+		} else {
+			switch url.pathExtension.lowercased() {
+			case "png":
+				type = kUTTypePNG
+			case "jpg", "jpeg":
+				type = kUTTypeJPEG
+				options = [kCGImageDestinationLossyCompressionQuality: 1.0] as CFDictionary
+			default:
+				type = kUTTypePNG
+			}
+		}
+
+		return (type, outputURL, options)
+	}
 
 }

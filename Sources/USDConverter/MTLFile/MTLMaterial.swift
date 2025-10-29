@@ -6,7 +6,7 @@
 //  Copyright © 2019 Emma Alyx Wunder. All rights reserved.
 //
 
-import Cocoa
+import Foundation
 import ModelIO
 
 // only has the properties used in Apple Model I/O MTL files

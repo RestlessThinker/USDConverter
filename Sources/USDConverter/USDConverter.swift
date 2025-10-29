@@ -213,8 +213,7 @@ public final class USDConverter {
 			}
 		}
 
-		var textureURLs: [URL] = []
-		#if canImport(AppKit)
+		let textureURLs: [URL]
 		do {
 			textureURLs = try modelFile.extractTextures(
 				options.convertTexturesToPNG,
@@ -225,11 +224,6 @@ public final class USDConverter {
 		} catch {
 			return ConversionResult(source: input, artifacts: nil, error: .textureExtractionFailed(outputDirectory, underlying: error))
 		}
-		#else
-		if options.convertTexturesToPNG {
-			return ConversionResult(source: input, artifacts: nil, error: .textureExtractionUnsupported)
-		}
-		#endif
 
 		if !options.includeModelIOIntermediates {
 			do {
