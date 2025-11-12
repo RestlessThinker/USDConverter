@@ -65,7 +65,7 @@ public enum ConverterError: Error {
 	case garbageCleanupFailed([URL], underlying: Error)
 }
 
-public final class USDConverter {
+public struct USDConverter {
 
 	public static let version = "1.7"
 
