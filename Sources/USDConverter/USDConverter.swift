@@ -75,7 +75,8 @@ public final class USDConverter {
 		self.fileManager = fileManager
 	}
 
-	public func convert(inputs: [URL], options: ConversionOptions = ConversionOptions()) -> [ConversionResult] {
+	@available(macOS 10.15, iOS 15, *)
+	public func convert(inputs: [URL], options: ConversionOptions = ConversionOptions()) async -> [ConversionResult] {
 		return inputs.map { self.convertSingle(input: $0, options: options) }
 	}
 

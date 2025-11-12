@@ -10,7 +10,7 @@ import Foundation
 import ArgumentParser
 import USDConverter
 
-struct USDConverterCommand: ParsableCommand {
+struct USDConverterCommand: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
         commandName: "usdconv",
         abstract: "USDConverter v\(USDConverter.version)",
@@ -35,7 +35,7 @@ struct USDConverterCommand: ParsableCommand {
     @Argument(help: "Input USDZ/SCN files to convert.", completion: .file())
     var input: [String] = []
 
-    mutating func run() throws {
+    mutating func run() async throws {
         guard !version else {
             print("USDConverter v\(USDConverter.version)")
             return
@@ -57,7 +57,7 @@ struct USDConverterCommand: ParsableCommand {
             logHandler: { message in print(message) }
         )
 
-        let results = converter.convert(inputs: inputs, options: options)
+        let results = await converter.convert(inputs: inputs, options: options)
 
         var failures: [ConversionResult] = []
         for result in results {

@@ -2,9 +2,9 @@ import XCTest
 @testable import USDConverter
 
 final class USDConverterTests: XCTestCase {
-    func testConvertWithNoInputsReturnsNoResults() {
+    func testConvertWithNoInputsReturnsNoResults() async throws {
         let converter = USDConverter()
-        let results = converter.convert(inputs: [])
+        let results = await converter.convert(inputs: [])
         XCTAssertTrue(results.isEmpty)
     }
 }
