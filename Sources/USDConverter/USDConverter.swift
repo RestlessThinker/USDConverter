@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Dispatch
 import ModelIO
 import SceneKit
 import SceneKit.ModelIO
@@ -70,14 +71,44 @@ public struct USDConverter {
 	public static let version = "1.7"
 
 	private let fileManager: FileManager
+	private let conversionQueue: DispatchQueue
+	private let customConvert: ((URL, ConversionOptions) -> ConversionResult)?
 
 	public init(fileManager: FileManager = .default) {
+		self.init(
+			fileManager: fileManager,
+			conversionQueue: DispatchQueue(
+				label: "com.captureforge.usdconverter.convert",
+				qos: .userInitiated
+			),
+			customConvert: nil
+		)
+	}
+
+	internal init(
+		fileManager: FileManager,
+		conversionQueue: DispatchQueue,
+		customConvert: ((URL, ConversionOptions) -> ConversionResult)?
+	) {
 		self.fileManager = fileManager
+		self.conversionQueue = conversionQueue
+		self.customConvert = customConvert
 	}
 
 	@available(macOS 10.15, iOS 15, *)
 	public func convert(inputs: [URL], options: ConversionOptions = ConversionOptions()) async -> [ConversionResult] {
-		return inputs.map { self.convertSingle(input: $0, options: options) }
+		// Serialize conversion work to avoid concurrent SceneKit/ModelIO access, which is not thread safe.
+		return await withCheckedContinuation { continuation in
+			self.conversionQueue.async {
+				let results = inputs.map { input -> ConversionResult in
+					if let customConvert = self.customConvert {
+						return customConvert(input, options)
+					}
+					return self.convertSingle(input: input, options: options)
+				}
+				continuation.resume(returning: results)
+			}
+		}
 	}
 
 	private func convertSingle(input: URL, options: ConversionOptions) -> ConversionResult {
