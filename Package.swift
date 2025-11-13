@@ -22,7 +22,10 @@ let package = Package(
         .testTarget(
             name: "USDConverterTests",
             dependencies: ["USDConverter"],
-            path: "Tests/USDConverterTests"
+            path: "Tests/USDConverterTests",
+            resources: [
+                .process("truck.usdz")
+            ]
         )
     ]
 )
