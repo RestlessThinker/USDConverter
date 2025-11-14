@@ -95,7 +95,8 @@ final class ModelFile {
 					continue
 				}
 
-				guard let cgImage = texture.imageFromTexture()?.takeRetainedValue() else {
+				// imageFromTexture returns an autoreleased CGImage; use takeUnretainedValue to avoid double release
+				guard let cgImage = texture.imageFromTexture()?.takeUnretainedValue() else {
 					logger?("Failed to create CGImage from texture \(textureFileName)")
 					continue
 				}
